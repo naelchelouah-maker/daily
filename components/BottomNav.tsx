@@ -25,7 +25,7 @@ export default function BottomNav() {
           const active = pathname === href
           return (
             <li key={href} className="flex-1">
-              <Link href={href} className="flex flex-col items-center gap-1 py-2 text-xs">
+              <Link href={href} aria-current={active ? 'page' : undefined} className="flex flex-col items-center gap-1 py-2 text-xs">
                 <Icon size={24} strokeWidth={1.5} className={active ? 'text-accent' : 'text-text-secondary'} />
                 <span className={active ? 'text-accent' : 'text-text-secondary'}>{label}</span>
               </Link>
