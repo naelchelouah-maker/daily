@@ -38,6 +38,9 @@ export default function PinGate({ children }: { children: ReactNode }) {
             type="password"
             inputMode="numeric"
             autoFocus
+            aria-label="Code d'accès"
+            aria-invalid={error}
+            aria-describedby={error ? 'pin-error' : undefined}
             value={pin}
             onChange={(e) => {
               setPin(e.target.value)
@@ -45,7 +48,11 @@ export default function PinGate({ children }: { children: ReactNode }) {
             }}
             className="rounded-2xl border border-surface-border bg-surface px-4 py-3 text-center text-2xl tracking-[0.5em] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           />
-          {error && <p className="text-center text-sm text-text-secondary">Code incorrect</p>}
+          {error && (
+            <p id="pin-error" aria-live="polite" className="text-center text-sm text-text-secondary">
+              Code incorrect
+            </p>
+          )}
           <button
             type="submit"
             className="min-h-[44px] rounded-2xl bg-accent px-4 py-3 text-center font-medium text-accent-foreground transition-transform active:scale-95"
