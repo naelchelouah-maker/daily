@@ -18,7 +18,10 @@ export default function SportCard() {
       .select('*')
       .eq('day_of_week', dayKey)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Failed to load today\'s workout:', error)
+        }
         setWorkout(data as Workout | null)
         setLoading(false)
       })
