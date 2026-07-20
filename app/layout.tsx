@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <body className="bg-background text-text-primary antialiased">
         <PinGate>
-          <div className="min-h-dvh pb-20">{children}</div>
+          <div className="min-h-dvh pb-[calc(6rem+env(safe-area-inset-bottom))]">{children}</div>
           <BottomNav />
         </PinGate>
         <ServiceWorkerRegister />
