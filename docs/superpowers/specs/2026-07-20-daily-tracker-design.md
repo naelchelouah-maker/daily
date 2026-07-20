@@ -29,7 +29,7 @@ Le PIN protège l'accès à l'interface, pas l'API Supabase : la clé anon et l'
 ```
 app-tracker/
 ├── app/
-│   ├── layout.tsx          # PIN gate + meta tags PWA (iOS)
+│   ├── layout.tsx          # PIN gate + BottomNav + meta tags PWA (iOS)
 │   ├── page.tsx             # accueil
 │   ├── sport/page.tsx
 │   ├── food/page.tsx
@@ -37,10 +37,12 @@ app-tracker/
 │   └── settings/page.tsx
 ├── components/
 │   ├── PinGate.tsx
+│   ├── BottomNav.tsx
 │   ├── DateHeader.tsx
 │   ├── SportCard.tsx
 │   ├── FoodCard.tsx
 │   ├── HabitsRow.tsx
+│   ├── UndoToast.tsx
 │   └── ui/                  # Card, Checkbox, Button, etc.
 ├── lib/
 │   └── supabase.ts          # client unique, clé anon
@@ -55,9 +57,31 @@ app-tracker/
 
 ## Design visuel
 
-- Fond `zinc-950`/`zinc-900` (anthracite), cartes `zinc-800`, coins arrondis `rounded-2xl`
-- Accent : teal `#14b8a6`
-- Typographie et layout épurés, mobile-first (max-width mobile centré, pas de sidebar desktop en Phase 1)
+### Palette (tokens sémantiques Tailwind, pas de hex bruts dans les composants)
+
+| Token | Valeur | Usage |
+|---|---|---|
+| `background` | `#1c1917` (stone-950) | fond de page |
+| `surface` | `#262220` | cartes |
+| `surface-border` | `#3a3532` | bordures / séparateurs |
+| `text-primary` | `#fafaf9` | texte principal |
+| `text-secondary` | `#a8a29e` | texte secondaire, labels |
+| `accent` | `#7c9885` (sauge) | boutons primaires, états actifs, streaks |
+| `accent-foreground` | `#1c1917` | texte sur fond `accent` (contraste — jamais de texte blanc sur sauge) |
+
+Cartes `rounded-2xl`, bordure `surface-border` 1px. Mobile-first, max-width mobile centré, pas de sidebar desktop en Phase 1.
+
+### Navigation
+
+Bottom tab bar fixe et persistante (5 items = Accueil, Sport, Food, Habits, Settings), icônes SVG (`lucide-react`, pas d'emoji) + label texte, état actif en `accent`. Padding bas `env(safe-area-inset-bottom)` pour la zone de la barre d'accueil iPhone (critique en mode standalone PWA, pas de chrome navigateur). Rendu dans `app/layout.tsx` via `BottomNav.tsx`, visible sur toutes les pages sauf l'écran PIN.
+
+### Détails UX
+
+- **Tactile** : toutes les checkboxes (exercices, habitudes, courses) ont une zone de tap ≥44×44px même si le carré visuel est plus petit ; feedback visuel (scale 0.95 au press, retour à 1 au relâchement)
+- **Formulaires sport** : labels visibles (pas de placeholder-only) pour charge/reps/RPE/notes ; `inputmode="numeric"` sur les champs numériques ; validation au blur ; chiffres en `tabular-nums`
+- **Suppression courses** : pas de suppression instantanée — toast "Supprimé — Annuler" affiché 3-5s avant suppression définitive
+- **Animations** : micro-interactions 150-300ms, `ease-out`, uniquement sur `transform`/`opacity` (jamais `width`/`height`), respect de `prefers-reduced-motion`
+- **États de sauvegarde** : bouton/champ désactivé pendant l'appel Supabase asynchrone, retour visuel bref (icône check) une fois la sauvegarde confirmée
 
 ## PWA
 
@@ -97,7 +121,7 @@ RLS : désactivée en Phase 1 (cohérent avec le compromis sécurité ci-dessus 
 - Rangée Habits : checkboxes des habitudes du jour (toggle `habit_logs` upsert par `habit_id` + date du jour), streak affiché à côté de chaque habitude
 
 ### `/sport`
-- Vue semaine : 7 jours (lun-dim) en rangée horizontale scrollable, jour actif surligné en accent teal
+- Vue semaine : 7 jours (lun-dim) en rangée horizontale scrollable, jour actif surligné en `accent`
 - Détail du jour sélectionné : liste des exercices du `exercises` jsonb du workout du jour, chaque exercice = case à cocher (`completed`) + champs charge/reps/RPE/notes
 - Sauvegarde : upsert dans `workout_logs` (une ligne par exercice par date) au blur de chaque champ ou au toggle de la case
 
