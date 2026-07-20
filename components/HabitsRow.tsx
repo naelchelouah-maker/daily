@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Flame } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toISODate } from '@/lib/date'
@@ -16,7 +16,7 @@ export default function HabitsRow() {
   const [habits, setHabits] = useState<HabitWithStatus[]>([])
   const todayISO = toISODate(new Date())
 
-  async function loadHabits() {
+  const loadHabits = useCallback(async () => {
     const { data: habitsData, error: habitsError } = await supabase.from('habits').select('*')
     const { data: logsData, error: logsError } = await supabase.from('habit_logs').select('*')
 
@@ -41,11 +41,11 @@ export default function HabitsRow() {
     })
 
     setHabits(withStatus)
-  }
+  }, [todayISO])
 
   useEffect(() => {
     loadHabits()
-  }, [])
+  }, [loadHabits])
 
   async function toggleHabit(habitId: string, current: boolean) {
     const { error } = await supabase
@@ -68,6 +68,7 @@ export default function HabitsRow() {
           <button
             key={habit.id}
             onClick={() => toggleHabit(habit.id, habit.completedToday)}
+            aria-pressed={habit.completedToday}
             className={`flex min-h-[44px] items-center gap-2 rounded-2xl border px-3 py-2 text-sm transition-transform active:scale-95 ${
               habit.completedToday
                 ? 'border-accent bg-accent text-accent-foreground'
