@@ -34,8 +34,9 @@ export default function FoodCard() {
     const { error } = await supabase.from('groceries').insert({ item: newItem.trim(), category: 'Autre' })
     if (error) {
       console.error('Failed to add grocery item:', error)
+    } else {
+      setNewItem('')
     }
-    setNewItem('')
     setSaving(false)
     loadItems()
   }
@@ -56,11 +57,13 @@ export default function FoodCard() {
           value={newItem}
           onChange={(e) => setNewItem(e.target.value)}
           placeholder="Ajouter un article"
+          aria-label="Ajouter un article"
           className="min-w-0 flex-1 rounded-2xl border border-surface-border bg-background px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <button
           type="submit"
           disabled={saving}
+          aria-label="Ajouter"
           className="min-h-[44px] min-w-[44px] rounded-2xl bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-transform active:scale-95 disabled:opacity-50"
         >
           +
