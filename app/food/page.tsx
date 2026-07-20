@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import UndoToast from '@/components/UndoToast'
@@ -12,7 +12,8 @@ export default function FoodPage() {
   const [items, setItems] = useState<Grocery[]>([])
   const [newItem, setNewItem] = useState('')
   const [newCategory, setNewCategory] = useState(CATEGORIES[CATEGORIES.length - 1])
-  const [pendingDelete, setPendingDelete] = useState<Grocery | null>(null)
+  const [pendingDeletes, setPendingDeletes] = useState<Grocery[]>([])
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
 
   async function loadItems() {
     const { data, error } = await supabase
@@ -51,31 +52,29 @@ export default function FoodPage() {
 
   function requestDelete(item: Grocery) {
     setItems((prev) => prev.filter((i) => i.id !== item.id))
-    setPendingDelete(item)
-    setTimeout(() => {
-      setPendingDelete((current) => {
-        if (current?.id === item.id) {
-          supabase
-            .from('groceries')
-            .delete()
-            .eq('id', item.id)
-            .then(({ error }) => {
-              if (error) {
-                console.error('Failed to delete grocery item:', error)
-              }
-            })
-          return null
-        }
-        return current
-      })
+    setPendingDeletes((prev) => [...prev, item])
+    const timer = setTimeout(() => {
+      timers.current.delete(item.id)
+      setPendingDeletes((prev) => prev.filter((i) => i.id !== item.id))
+      supabase
+        .from('groceries')
+        .delete()
+        .eq('id', item.id)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Failed to delete grocery item:', error)
+          }
+        })
     }, 4000)
+    timers.current.set(item.id, timer)
   }
 
-  function undoDelete() {
-    if (pendingDelete) {
-      setItems((prev) => [...prev, pendingDelete])
-      setPendingDelete(null)
-    }
+  function undoDelete(item: Grocery) {
+    const timer = timers.current.get(item.id)
+    if (timer) clearTimeout(timer)
+    timers.current.delete(item.id)
+    setItems((prev) => [...prev, item])
+    setPendingDeletes((prev) => prev.filter((i) => i.id !== item.id))
   }
 
   const grouped = CATEGORIES.map((category) => ({
@@ -156,7 +155,9 @@ export default function FoodPage() {
         {items.length === 0 && <p className="text-text-secondary">Liste vide</p>}
       </div>
 
-      {pendingDelete && <UndoToast message={`Supprimé : ${pendingDelete.item}`} onUndo={undoDelete} />}
+      {pendingDeletes.map((item) => (
+        <UndoToast key={item.id} message={`Supprimé : ${item.item}`} onUndo={() => undoDelete(item)} />
+      ))}
     </main>
   )
 }
