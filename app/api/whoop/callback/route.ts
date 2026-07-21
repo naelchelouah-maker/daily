@@ -6,22 +6,32 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-  const errorRedirect = NextResponse.redirect(new URL('/settings?whoop=error', appUrl))
+  function errorRedirect() {
+    const response = NextResponse.redirect(new URL('/settings?whoop=error', appUrl))
+    response.cookies.delete('whoop_oauth_state')
+    return response
+  }
 
   const code = request.nextUrl.searchParams.get('code')
   const state = request.nextUrl.searchParams.get('state')
   const cookieState = request.cookies.get('whoop_oauth_state')?.value
+  const oauthError = request.nextUrl.searchParams.get('error')
+
+  if (oauthError) {
+    console.error('Whoop callback: authorization denied or failed:', oauthError)
+    return errorRedirect()
+  }
 
   if (!code || !state || !cookieState || state !== cookieState) {
     console.error('Whoop callback: missing code or state mismatch')
-    return errorRedirect
+    return errorRedirect()
   }
 
   const clientId = process.env.WHOOP_CLIENT_ID
   const clientSecret = process.env.WHOOP_CLIENT_SECRET
   if (!clientId || !clientSecret) {
     console.error('Whoop callback: missing client credentials')
-    return errorRedirect
+    return errorRedirect()
   }
 
   try {
@@ -39,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     if (!tokenResponse.ok) {
       console.error('Whoop token exchange failed:', tokenResponse.status, await tokenResponse.text())
-      return errorRedirect
+      return errorRedirect()
     }
 
     const tokens = (await tokenResponse.json()) as {
@@ -59,6 +69,6 @@ export async function GET(request: NextRequest) {
     return response
   } catch (error) {
     console.error('Whoop callback error:', error)
-    return errorRedirect
+    return errorRedirect()
   }
 }
