@@ -68,17 +68,26 @@ async function whoopGet(path: string, accessToken: string): Promise<Record<strin
 
 export async function GET() {
   let tokens = await getWhoopTokens()
+  console.error(
+    'DEBUG summary: tokens=',
+    tokens ? { expires_at: tokens.expires_at } : null,
+    'now=',
+    new Date().toISOString()
+  )
   if (!tokens) {
     return notConnectedResponse()
   }
 
-  if (needsRefresh(tokens.expires_at, Date.now())) {
+  const refreshNeeded = needsRefresh(tokens.expires_at, Date.now())
+  console.error('DEBUG summary: refreshNeeded=', refreshNeeded)
+  if (refreshNeeded) {
     let refreshed: WhoopTokens | null = null
     try {
       refreshed = await refreshTokens(tokens)
     } catch (error) {
       console.error('Whoop refresh error:', error)
     }
+    console.error('DEBUG summary: refreshed=', refreshed ? 'success' : 'null')
     if (!refreshed) {
       await deleteWhoopTokens()
       return notConnectedResponse()

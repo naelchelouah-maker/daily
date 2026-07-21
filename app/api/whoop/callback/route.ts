@@ -58,10 +58,15 @@ export async function GET(request: NextRequest) {
       expires_in: number
     }
 
+    console.error('DEBUG callback: expires_in=', tokens.expires_in, 'typeof=', typeof tokens.expires_in)
+
+    const expiresAt = computeExpiresAt(Date.now(), tokens.expires_in)
+    console.error('DEBUG callback: computed expires_at=', expiresAt, 'now=', new Date().toISOString())
+
     await saveWhoopTokens({
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
-      expires_at: computeExpiresAt(Date.now(), tokens.expires_in),
+      expires_at: expiresAt,
     })
 
     const response = NextResponse.redirect(new URL('/settings?whoop=connected', appUrl))
