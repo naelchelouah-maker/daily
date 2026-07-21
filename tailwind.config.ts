@@ -12,6 +12,8 @@ const config: Config = {
         'text-secondary': '#a8a29e',
         accent: '#7c9885',
         'accent-foreground': '#1c1917',
+        warning: '#d9a662',
+        danger: '#c1666b',
       },
     },
   },
