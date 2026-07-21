@@ -27,7 +27,12 @@ export default function WhoopCard() {
 
   useEffect(() => {
     fetch('/api/whoop/summary')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Whoop summary returned ${res.status}`)
+        }
+        return res.json()
+      })
       .then((data) => {
         if (data.connected) {
           setSummary({ status: 'connected', recovery: data.recovery, sleep: data.sleep, strain: data.strain })

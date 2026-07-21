@@ -70,6 +70,7 @@ export default function SettingsPage() {
           <a
             href="/api/whoop/connect"
             aria-disabled={whoopStatus === 'loading'}
+            tabIndex={whoopStatus === 'loading' ? -1 : undefined}
             className={`flex min-h-[44px] items-center rounded-2xl border border-surface-border bg-surface px-4 py-3 text-text-primary transition-transform active:scale-95 ${
               whoopStatus === 'loading' ? 'pointer-events-none opacity-50' : ''
             }`}
