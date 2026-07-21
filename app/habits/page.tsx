@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Flame } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toISODate } from '@/lib/date'
@@ -17,7 +17,7 @@ export default function HabitsPage() {
   const [newHabit, setNewHabit] = useState('')
   const todayISO = toISODate(new Date())
 
-  async function loadHabits() {
+  const loadHabits = useCallback(async () => {
     const { data: habitsData, error: habitsError } = await supabase.from('habits').select('*').order('created_at')
     const { data: logsData, error: logsError } = await supabase.from('habit_logs').select('*')
 
@@ -42,11 +42,11 @@ export default function HabitsPage() {
         }
       })
     )
-  }
+  }, [todayISO])
 
   useEffect(() => {
     loadHabits()
-  }, [])
+  }, [loadHabits])
 
   async function handleAdd(e: FormEvent) {
     e.preventDefault()
