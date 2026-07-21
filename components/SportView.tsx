@@ -139,7 +139,7 @@ export default function SportView() {
                     updateField(exercise.name, 'completed', completed)
                     saveExercise(exercise.name, { completed })
                   }}
-                  className="h-5 w-5 accent-[#7c9885]"
+                  className="h-5 w-5 accent-accent"
                 />
                 <span className="text-text-primary">
                   {exercise.name} <span className="text-text-secondary">{exercise.sets}x{exercise.reps}</span>

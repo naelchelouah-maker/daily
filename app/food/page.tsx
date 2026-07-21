@@ -14,6 +14,7 @@ export default function FoodPage() {
   const [newCategory, setNewCategory] = useState(CATEGORIES[CATEGORIES.length - 1])
   const [pendingDeletes, setPendingDeletes] = useState<Grocery[]>([])
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
+  const pendingIds = useRef(new Set<string>())
 
   async function loadItems() {
     const { data, error } = await supabase
@@ -23,7 +24,8 @@ export default function FoodPage() {
     if (error) {
       console.error('Failed to load groceries:', error)
     }
-    setItems((data as Grocery[]) ?? [])
+    const fetched = (data as Grocery[]) ?? []
+    setItems(fetched.filter((item) => !pendingIds.current.has(item.id)))
   }
 
   useEffect(() => {
@@ -53,8 +55,10 @@ export default function FoodPage() {
   function requestDelete(item: Grocery) {
     setItems((prev) => prev.filter((i) => i.id !== item.id))
     setPendingDeletes((prev) => [...prev, item])
+    pendingIds.current.add(item.id)
     const timer = setTimeout(() => {
       timers.current.delete(item.id)
+      pendingIds.current.delete(item.id)
       setPendingDeletes((prev) => prev.filter((i) => i.id !== item.id))
       supabase
         .from('groceries')
@@ -73,6 +77,7 @@ export default function FoodPage() {
     const timer = timers.current.get(item.id)
     if (timer) clearTimeout(timer)
     timers.current.delete(item.id)
+    pendingIds.current.delete(item.id)
     setItems((prev) => [...prev, item])
     setPendingDeletes((prev) => prev.filter((i) => i.id !== item.id))
   }
@@ -132,7 +137,7 @@ export default function FoodPage() {
                       type="checkbox"
                       checked={item.checked}
                       onChange={() => toggleChecked(item)}
-                      className="h-5 w-5 accent-[#7c9885]"
+                      className="h-5 w-5 accent-accent"
                     />
                     <span
                       className={item.checked ? 'text-text-secondary line-through' : 'text-text-primary'}
@@ -155,8 +160,8 @@ export default function FoodPage() {
         {items.length === 0 && <p className="text-text-secondary">Liste vide</p>}
       </div>
 
-      {pendingDeletes.map((item) => (
-        <UndoToast key={item.id} message={`Supprimé : ${item.item}`} onUndo={() => undoDelete(item)} />
+      {pendingDeletes.map((item, index) => (
+        <UndoToast key={item.id} message={`Supprimé : ${item.item}`} onUndo={() => undoDelete(item)} offset={index} />
       ))}
     </main>
   )
